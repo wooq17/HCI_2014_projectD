@@ -2,7 +2,7 @@ HCI_2014_projectD
 =================
 
 Kinect를 이용해서 사용자가 media wall에 있는 이미지를 입체적으로 느낄 수 있게 이미지를 변형
-참고 영상 : http://www.youtube.com/watch?v=Jd3-eiid-Uw
+- 참고 영상 : http://www.youtube.com/watch?v=Jd3-eiid-Uw
    
 
 상세 :
