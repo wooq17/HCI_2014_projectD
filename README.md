@@ -51,4 +51,5 @@ NEXT 생활이 이제 1년이 조금 넘었지만 이제까지 홀에 있는 미
 
 
 
-개발 계획은 issue 항목 참조
+개발 계획은 링크 참조
+https://github.com/wooq17/HCI_2014_projectD/issues/milestones
