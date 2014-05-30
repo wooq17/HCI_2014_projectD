@@ -26,12 +26,22 @@ public:
 	void windowResized(int w, int h);
 
 private:
+    ofImage m_Image;
+    /// void handEvent(ofxOpenNIHandEvent & event);
     
-    void handEvent(ofxOpenNIHandEvent & event);
+	/// ofxOpenNI openNIDevice;
+    /// ofTrueTypeFont verdana;
     
-	ofxOpenNI openNIDevice;
-    ofTrueTypeFont verdana;
-    
+	int m_MousePrevX;
+	int m_MousePrevY;
+
+	int m_MouseCurrX;
+	int m_MouseCurrY;
+
+	float m_ImagePositionX;
+	float m_ImagePositionY;
+
+	float m_ImageSizeWeight;
 };
 
 #endif
