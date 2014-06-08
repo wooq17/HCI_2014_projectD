@@ -24,36 +24,62 @@ void testApp::setup() {
 	m_MouseCurrX = m_MousePrevX;
 	m_MouseCurrY = m_MousePrevY;
 
-    /// openNIDevice.setup();
-    /// openNIDevice.addImageGenerator();
-    /// openNIDevice.addDepthGenerator();
-    /// openNIDevice.setRegister(true);
-    /// openNIDevice.setMirror(true);
+    openNIDevice.setup();
+    openNIDevice.addImageGenerator();
+    openNIDevice.addDepthGenerator();
+    openNIDevice.setRegister(true);
+    openNIDevice.setMirror(true);
     
     // setup the hand generator
-    /// openNIDevice.addHandsGenerator();
+    openNIDevice.addHandsGenerator();
     
     // add all focus gestures (ie., wave, click, raise arm)
-    /// openNIDevice.addAllHandFocusGestures();
+    openNIDevice.addAllHandFocusGestures();
     
-    // or you can add them one at a time
-    //vector<string> gestureNames = openNIDevice.getAvailableGestures(); // you can use this to get a list of gestures
-                                                                         // prints to console and/or you can use the returned vector
-    //openNIDevice.addHandFocusGesture("Wave");
+    openNIDevice.setMaxNumHands(MAX_NUMBER_OF_HAND);
     
-    /// openNIDevice.setMaxNumHands(MAX_NUMBER_OF_HAND);
+    openNIDevice.start();
     
-    /// openNIDevice.start();
-    
-    /// verdana.loadFont(ofToDataPath("verdana.ttf"), 24);
+    verdana.loadFont(ofToDataPath("verdana.ttf"), 24);
 
 	// hand event를 담당하는 리스너 등록
-	/// ofAddListener(openNIDevice.handEvent, this, &testApp::handEvent);
+	ofAddListener(openNIDevice.handEvent, this, &testApp::headEvent);
+	ofAddListener(openNIDevice.handEvent, this, &testApp::headEvent);
+
+	m_IsWaiting = true;
+
+	m_IsTrackingPrev = false;
+	m_IsTrackingCurr = false;
 }
 
 //--------------------------------------------------------------
 void testApp::update(){
-    /// openNIDevice.update();
+	// openNI
+    openNIDevice.update();
+	m_IsTrackingCurr = openNIDevice.getNumTrackedUsers() > 0 ? true : false;
+
+	// isTracking
+	if ( !m_IsTrackingPrev && m_IsTrackingCurr )
+	{
+		// detect
+		m_IsWaiting = false;
+
+		// start the GRAVITY
+	}
+	else if ( m_IsTrackingPrev && !m_IsTrackingCurr )
+	{
+		// lost
+		m_IsWaiting = true;
+
+		// stop the GRAVITY
+	}
+	
+	m_IsTrackingPrev = m_IsTrackingCurr;
+
+	// draw image
+
+
+	// image transform
 	m_ImageSizeWeight += ( ( m_MouseCurrY - m_MousePrevY ) / 5000.0f );
 	m_MousePrevY = m_MouseCurrY;
 
@@ -108,14 +134,21 @@ void testApp::draw(){
 }
 
 //--------------------------------------------------------------
-/// void testApp::handEvent(ofxOpenNIHandEvent & event){
+void testApp::headEvent(ofxOpenNIHandEvent & event){
     // show hand event messages in the console
-    // ofLogNotice() << getHandStatusAsString(event.handStatus) << "for hand" << event.id << "from device" << event.deviceID;
-/// }
+	// 머리 인식하면 씬 시작
+	// 이동하면 화면 움직임
+    ofLogNotice() << getHandStatusAsString(event.handStatus) << "for hand" << event.id << "from device" << event.deviceID;
+}
+
+void testApp::userEvent(ofxOpenNIUserEvent& event)
+{
+	// user event
+}
 
 //--------------------------------------------------------------
 void testApp::exit(){
-    // openNIDevice.stop();
+    openNIDevice.stop();
 }
 
 //--------------------------------------------------------------

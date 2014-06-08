@@ -1,9 +1,11 @@
-#ifndef _TEST_APP
+﻿#ifndef _TEST_APP
 #define _TEST_APP
 
 #include "ofxOpenNI.h"
 #include "ofMain.h"
 #include <array>
+#include "TextBlock.h"
+#include "config.h"
 
 #define MAX_DEVICES 2
 #define MAX_NUMBER_OF_HAND 4
@@ -26,28 +28,15 @@ public:
 	void windowResized(int w, int h);
 
 private:
-    void headEvent(ofxOpenNIHandEvent& event);
-	void userEvent(ofxOpenNIUserEvent& event);
+	void handEvent(ofxOpenNIUserEvent& event);
     
 	ofxOpenNI openNIDevice;
-    ofTrueTypeFont verdana;
-    ofImage m_Image;
-    
-	bool m_IsTrackingPrev;
-	bool m_IsTrackingCurr;
+    ofTrueTypeFont m_Text;
 
-	bool m_IsWaiting;
+	std::array<TextBlock, TEXT_BLOCK_NUMBER> m_TextBlock;
+	std::array<float, TEXT_BLOCK_NUMBER> m_BodyEdge;
 
-	int m_MousePrevX;
-	int m_MousePrevY;
-
-	int m_MouseCurrX;
-	int m_MouseCurrY;
-
-	float m_ImagePositionX;
-	float m_ImagePositionY;
-
-	float m_ImageSizeWeight;
+	DWORD m_TimeStampPrev;
 };
 
 #endif
