@@ -34,7 +34,7 @@ private:
     ofTrueTypeFont m_Text;
 
 	std::array<TextBlock, TEXT_BLOCK_NUMBER> m_TextBlock;
-	std::array<float, TEXT_BLOCK_NUMBER> m_BodyEdge;
+	std::array<bool, KINECT_RESOLUTION_WIDTH * KINECT_RESOLUTION_HEIGHT> m_DepthMap;
 
 	DWORD m_TimeStampPrev;
 };
