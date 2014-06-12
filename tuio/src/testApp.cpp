@@ -1,5 +1,4 @@
 #include "testApp.h"
-#include <array>
 
 int TransitionTable[][INPUT_TYPE_NUMBER] =
 {
@@ -26,6 +25,7 @@ void testApp::setup()
 	m_CurrentState = State::PHOTO_ALBUM_CLOSED;
 
 	m_SingleTapFlag = false;
+	m_TwoFingersFlag = false;
 	m_TouchNumer = 0;
 	
 	m_FirstDistanceFourFingers = 0.0f;
@@ -38,22 +38,18 @@ void testApp::setup()
 //--------------------------------------------------------------
 void testApp::update()
 {
-	// 터치 수를 유지하면서 작동하는 경우 처리
-	/*
-	DRAG,
-		
-
-	PINCH,
-	SPREAD,
-	ROTATE,
-	*/
-
 	if (m_SingleTapFlag)
 	{
 		if (ofGetElapsedTimef() - m_LsatSingleTapTime > TAP_TIME_GAP)
 		{
 			SingleTap();
 		}
+	}
+
+	if (m_TwoFingersFlag)
+	{
+		// 판정
+		// printf("2 fingers\n");
 	}
 }
 
@@ -101,8 +97,11 @@ void testApp::windowResized(int w, int h){
 
 void testApp::touchDown(ofTouchEventArgs & touch)
 {
-	printf("down : %f\n", ofGetElapsedTimef());
+	// for debugging
+	// printf("down : %f\n", ofGetElapsedTimef());
+
 	m_TouchNumer = myTuio.client->getTuioCursors().size();
+	m_TwoFingersFlag = false;
 
 	switch (m_TouchNumer)
 	{
@@ -111,6 +110,7 @@ void testApp::touchDown(ofTouchEventArgs & touch)
 		break;
 	case 2:
 		m_LastTouchTwoTime = ofGetElapsedTimef();
+		m_TwoFingersFlag = true;
 		break;
 	case 4:
 		// 손가락 사이의 거리를 측정해서 저장
@@ -124,9 +124,10 @@ void testApp::touchDown(ofTouchEventArgs & touch)
 
 void testApp::touchUp(ofTouchEventArgs & touch)
 {
-	printf("up : %f\n", ofGetElapsedTimef());
+	// for debugging
+	// printf("up : %f\n", ofGetElapsedTimef());
 
-	if (m_TouchNumer == 4)
+	if (m_TouchNumer == 4 && myTuio.client->getTuioCursors().size() > 4)
 	{
 		m_LastDistanceFourFingers += GetDistanceFromCenter(touch.x, touch.y);
 	}
@@ -168,20 +169,27 @@ void testApp::touchUp(ofTouchEventArgs & touch)
 	default:
 		break;
 	}
-
+	
+	m_TwoFingersFlag = false;
 	m_TouchNumer = 0;
 }
 
 void testApp::touchMoved(ofTouchEventArgs & touch){
 	
-}
-
-void testApp::TouchOne()
-{
-}
-
-void testApp::TouchTwo()
-{
+	switch(myTuio.client->getTuioCursors().size())
+	{
+	case 1:
+		printf("move : 1\n");
+		// drag
+		break;
+	case 2:
+		printf("move : 2\n");
+		// rotate
+		// scale
+		break;
+	default:
+		break;
+	}
 }
 
 void testApp::SetFingersCenterPos()

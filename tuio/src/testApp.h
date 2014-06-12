@@ -4,6 +4,7 @@
 #include "ofMain.h"
 #include "ofxTuioClient.h"
 #include "config.h"
+#include <array>
 
 class testApp : public ofBaseApp
 {
@@ -36,9 +37,6 @@ private:
 	void Squeeze();
 	void Splay();
 
-	void TouchOne();
-	void TouchTwo();
-
 	float GetFingersDistance();
 	void SetFingersCenterPos();
 	float GetDistanceFromCenter(float x, float y);
@@ -47,6 +45,8 @@ private:
 	int m_TouchNumer;
 
 	bool m_SingleTapFlag;
+	bool m_TwoFingersFlag;
+	std::array<ofPoint, 2> m_TransformBasePosition;
 
 	float m_LastTouchOneTime;
 	float m_LastTouchTwoTime;
@@ -57,6 +57,7 @@ private:
 	float m_LastDistanceFourFingers;
 	float m_CenterX;
 	float m_CenterY;
+
 };
 
 #endif
