@@ -5,6 +5,7 @@
 #include "ofxTuioClient.h"
 #include "config.h"
 #include <array>
+#include "PhotoAlbum.h"
 
 class testApp : public ofBaseApp
 {
@@ -44,7 +45,9 @@ private:
 	State m_CurrentState;
 	int m_TouchNumer;
 
-	bool m_SingleTapFlag;
+	bool	m_SingleTapFlag;
+	ofPoint m_SingleTapPosition;
+
 	bool m_TwoFingersFlag;
 	std::array<ofPoint, 2> m_TransformBasePosition;
 
@@ -58,6 +61,7 @@ private:
 	float m_CenterX;
 	float m_CenterY;
 
+	PhotoAlbum m_PhotoAlbum;
 };
 
 #endif

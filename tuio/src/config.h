@@ -3,6 +3,9 @@
 #define WINDOW_WIDTH 1024
 #define WINDOW_HEIGHT 768
 
+const float PREVIEW_IMG_SIZE = 50.0f;
+const float PREVIEW_DISTANCE = 200.0f;
+
 const int INPUT_TYPE_NUMBER = 8;
 
 const float TAP_TIME_GAP = 0.8f;

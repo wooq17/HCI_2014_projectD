@@ -1,4 +1,5 @@
 #include "testApp.h"
+#include "Photo.h"
 
 int TransitionTable[][INPUT_TYPE_NUMBER] =
 {
@@ -33,6 +34,29 @@ void testApp::setup()
 
 	m_CenterX = 0.0f;
 	m_CenterY = 0.0f;
+
+	m_PhotoAlbum.SetAlbumImage("adventure_time.jpg");
+	m_PhotoAlbum.SetScale(0.3f); // 너무 크다
+
+	Photo* finn = new Photo();
+	finn->SetImage("finn.png");
+	m_PhotoAlbum.AddPhoto(finn);
+
+	Photo* jake = new Photo();
+	jake->SetImage("jake.png");
+	m_PhotoAlbum.AddPhoto(jake);
+
+	Photo* marceline = new Photo();
+	marceline->SetImage("marceline.png");
+	m_PhotoAlbum.AddPhoto(marceline);
+
+	Photo* ice_king = new Photo();
+	ice_king->SetImage("ice_king.png");
+	m_PhotoAlbum.AddPhoto(ice_king);
+	
+	Photo* bubblegum = new Photo();
+	bubblegum->SetImage("bubblegum.png");
+	m_PhotoAlbum.AddPhoto(bubblegum);
 }
 
 //--------------------------------------------------------------
@@ -56,7 +80,23 @@ void testApp::update()
 //--------------------------------------------------------------
 void testApp::draw()
 {
-	
+	switch (m_CurrentState)
+	{
+	case State::PHOTO_ALBUM_CLOSED:
+		// 앨범을 그린다.
+		m_PhotoAlbum.Display(false);
+		break;
+	case State::PHOTO_ALBUM_OPEN:
+		m_PhotoAlbum.Display(true);
+		// 앨범 안 사진을 그린다
+		break;
+	case State::PHOTO_SELECTED:
+		break;
+	case State::PHOTO_TRANSFORMED:
+		break;
+	default:
+		break;
+	}
 }
 
 //--------------------------------------------------------------
@@ -126,10 +166,12 @@ void testApp::touchUp(ofTouchEventArgs & touch)
 {
 	// for debugging
 	// printf("up : %f\n", ofGetElapsedTimef());
+	float tempX = touch.x * WINDOW_WIDTH;
+	float tempY = touch.y * WINDOW_HEIGHT;
 
 	if (m_TouchNumer == 4 && myTuio.client->getTuioCursors().size() > 4)
 	{
-		m_LastDistanceFourFingers += GetDistanceFromCenter(touch.x, touch.y);
+		m_LastDistanceFourFingers += GetDistanceFromCenter(tempX, tempY);
 	}
 
 	if (myTuio.client->getTuioCursors().size() != 1)
@@ -154,6 +196,8 @@ void testApp::touchUp(ofTouchEventArgs & touch)
 			{
 				m_SingleTapFlag = true;
 				m_LsatSingleTapTime = currentTime;
+				m_SingleTapPosition.x = tempX;
+				m_SingleTapPosition.y = tempY;
 			}
 		}
 		break;
@@ -197,8 +241,8 @@ void testApp::SetFingersCenterPos()
 	// 각 좌표 누적
 	for ( auto *iter : myTuio.client->getTuioCursors() )
 	{
-		m_CenterX += iter->getX();
-		m_CenterY += iter->getY();
+		m_CenterX += (iter->getX() * WINDOW_WIDTH);
+		m_CenterY += (iter->getY() * WINDOW_HEIGHT);
 	}
 
 	// 평균
@@ -239,8 +283,10 @@ void testApp::SingleTap()
 	switch (m_CurrentState)
 	{
 	case State::PHOTO_ALBUM_CLOSED:
-		// 사진첩을 클릭한 것인지 확인해서 사진첩 오픈
-		// 클릭한 거 아니면 리턴
+		if (!m_PhotoAlbum.Touch(m_SingleTapPosition) )
+			return;
+		// 터치 성공 다음 단계로
+		printf("next step : OPEN\n");
 		break;
 	case State::PHOTO_ALBUM_OPEN:
 		// 사진이 선택되었는지 판정해서 사진 선택
@@ -264,6 +310,7 @@ void testApp::DoubleTap()
 	{
 	case State::PHOTO_ALBUM_OPEN:
 		// 앨범 닫힘 상태로 돌아간다
+		m_PhotoAlbum.Reset();
 		break;
 	case State::PHOTO_SELECTED:
 		// 앨범 열림 상태로 돌아간다
@@ -382,6 +429,7 @@ void testApp::Squeeze()
 		// 리턴
 		break;
 	case State::PHOTO_ALBUM_OPEN:
+		m_PhotoAlbum.Reset();
 		// 앨범 닫힌 상태로 돌아감
 		break;
 	case State::PHOTO_SELECTED:
