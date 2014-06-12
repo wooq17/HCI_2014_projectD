@@ -9,10 +9,13 @@ public:
 	~Photo(void);
 	
 	void SetImage(const std::string& filePath);
+	void Reset();
 
 	void SetPosition(float x, float y) { m_Position.x = x; m_Position.y = y; }
+	void MovePosition(float x, float y) { m_Position.x += x; m_Position.y += y; }
 	void SetSize(float width, float height) { m_Width = width; m_Height = height; }
 	void SetScale(float scale) { m_Scale = scale; }
+	void SetAngle(float angle);
 	void Display();
 
 	bool Touch(float x, float y);
@@ -23,9 +26,10 @@ public:
 private:
 	ofImage m_PhotoImage;
 
-	ofPoint				m_Position;
-	float				m_Width;
-	float				m_Height;
-	float				m_Scale;
+	ofPoint	m_Position;
+	float	m_Width;
+	float	m_Height;
+	float	m_Scale;
+	float	m_RotateAngle;
 };
 

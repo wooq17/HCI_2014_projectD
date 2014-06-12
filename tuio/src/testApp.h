@@ -7,6 +7,8 @@
 #include <array>
 #include "PhotoAlbum.h"
 
+class Photo;
+
 class testApp : public ofBaseApp
 {
 public:
@@ -31,16 +33,16 @@ public:
 private:
 	void SingleTap();
 	void DoubleTap();
-	void Drag();
-	void Pinch();
-	void Spread();
-	void Rotate();
+	void Drag(float tempX, float tempY);
+	void Transform();
 	void Squeeze();
 	void Splay();
 
 	float GetFingersDistance();
 	void SetFingersCenterPos();
 	float GetDistanceFromCenter(float x, float y);
+
+	void SetBasePoints();
 
 	State m_CurrentState;
 	int m_TouchNumer;
@@ -50,6 +52,7 @@ private:
 
 	bool m_TwoFingersFlag;
 	std::array<ofPoint, 2> m_TransformBasePosition;
+	std::array<ofPoint, 2> m_TransformCurrentPosition;
 
 	float m_LastTouchOneTime;
 	float m_LastTouchTwoTime;
@@ -62,6 +65,7 @@ private:
 	float m_CenterY;
 
 	PhotoAlbum m_PhotoAlbum;
+	Photo*		m_CurrentSelectedPhoto;
 };
 
 #endif

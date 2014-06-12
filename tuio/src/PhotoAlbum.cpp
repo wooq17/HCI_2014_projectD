@@ -26,12 +26,29 @@ PhotoAlbum::~PhotoAlbum(void)
 	);
 }
 
-void PhotoAlbum::Reset()
+void PhotoAlbum::Close()
 {
+	// 앨범 안 이미지들을 다시 원래 위치로 복구 (앨범 이미지 위치로)
 	std::for_each(m_PhotoList.begin(), m_PhotoList.end(), [&](Photo* each)
 	{
 		each->SetPreviewSize();
 		each->SetPosition(m_Position.x, m_Position.y);
+	}
+	);
+}
+
+void PhotoAlbum::Open()
+{
+	// 앨범 안 이미지들의 위치를 바꾼다.
+	int imageCount = m_PhotoList.size();
+	double angle = 3.1415926 * 2 / imageCount;
+
+	int i = 0;
+	std::for_each(m_PhotoList.begin(), m_PhotoList.end(), [&](Photo* each)
+	{
+		each->SetPreviewSize();
+		each->SetPosition(m_Position.x + cos(angle * i) * PREVIEW_DISTANCE, m_Position.y + sin(angle * i) * PREVIEW_DISTANCE );
+		++i;
 	}
 	);
 }
@@ -69,24 +86,11 @@ bool PhotoAlbum::Touch(float x, float y)
 		y > m_Position.y - (m_Height * m_Scale)/2 &&
 		y < m_Position.y + (m_Height * m_Scale)/2)
 	{
-		// 앨범 안 이미지들의 위치를 바꾼다.
-		int imageCount = m_PhotoList.size();
-		double angle = 3.1415926 * 2 / imageCount;
-
-		int i = 0;
-		std::for_each(m_PhotoList.begin(), m_PhotoList.end(), [&](Photo* each)
-		{
-			each->SetPosition(m_Position.x + cos(angle * i) * PREVIEW_DISTANCE, m_Position.y + sin(angle * i) * PREVIEW_DISTANCE );
-			++i;
-		}
-		);
-
 		return true;
 	}
 
 	return false;
 }
-
 
 void PhotoAlbum::Display(bool isOpen)
 {
@@ -107,4 +111,18 @@ void PhotoAlbum::Display(bool isOpen)
 		}
 		);
 	}
+}
+
+Photo* PhotoAlbum::GetSelectedPhoto(float x, float y)
+{
+	Photo* returnVal = nullptr;
+
+	std::for_each(m_PhotoList.begin(), m_PhotoList.end(), [&](Photo* each)
+	{
+		if ( each->Touch(x, y) )
+			returnVal = each;
+	}
+	);
+
+	return returnVal;
 }

@@ -3,10 +3,10 @@
 
 int TransitionTable[][INPUT_TYPE_NUMBER] =
 {
-	1, -1, 0, -1, -1, -1, -1, 1,	// 사진첩 닫힘 상태
-	2, 0, 1, -1, -1, -1, 0, -1,		// 사진첩 열림 상태
-	-1, 1, 3, 3, 3, 3, 1, -1,		// 사진 선택 상태
-	-1, 2, 3, 3, 3, 3, 1, -1		// 사진 변형 상태
+	1, -1, 0, -1, -1, 1,	// 사진첩 닫힘 상태
+	2, 0, 1, -1, 0, -1,		// 사진첩 열림 상태
+	-1, 1, 3, 3, 1, -1,		// 사진 선택 상태
+	-1, 2, 3, 3, 1, -1		// 사진 변형 상태
 };
 
 //--------------------------------------------------------------
@@ -57,6 +57,8 @@ void testApp::setup()
 	Photo* bubblegum = new Photo();
 	bubblegum->SetImage("bubblegum.png");
 	m_PhotoAlbum.AddPhoto(bubblegum);
+
+	m_CurrentSelectedPhoto = nullptr;
 }
 
 //--------------------------------------------------------------
@@ -70,10 +72,12 @@ void testApp::update()
 		}
 	}
 
+	// drag 추가 할 것
+
 	if (m_TwoFingersFlag)
 	{
 		// 판정
-		// printf("2 fingers\n");
+		Transform();
 	}
 }
 
@@ -87,12 +91,13 @@ void testApp::draw()
 		m_PhotoAlbum.Display(false);
 		break;
 	case State::PHOTO_ALBUM_OPEN:
+		// 앨범과 안에 있는 사진들의 미리보기를 그린다
 		m_PhotoAlbum.Display(true);
-		// 앨범 안 사진을 그린다
 		break;
 	case State::PHOTO_SELECTED:
-		break;
 	case State::PHOTO_TRANSFORMED:
+		// 현재 선택된 그림을 그린다.
+		m_CurrentSelectedPhoto->Display();
 		break;
 	default:
 		break;
@@ -147,10 +152,13 @@ void testApp::touchDown(ofTouchEventArgs & touch)
 	{
 	case 1:
 		m_LastTouchOneTime = ofGetElapsedTimef();
+		m_SingleTapPosition.x = touch.x * WINDOW_WIDTH;
+		m_SingleTapPosition.y = touch.y * WINDOW_HEIGHT;
 		break;
 	case 2:
 		m_LastTouchTwoTime = ofGetElapsedTimef();
 		m_TwoFingersFlag = true;
+		SetBasePoints();
 		break;
 	case 4:
 		// 손가락 사이의 거리를 측정해서 저장
@@ -162,12 +170,29 @@ void testApp::touchDown(ofTouchEventArgs & touch)
 	}
 }
 
+void testApp::SetBasePoints()
+{
+	int i = 0;
+	for ( auto *iter : myTuio.client->getTuioCursors() )
+	{
+		if (i >= 2)
+			return;
+
+		m_TransformBasePosition[i].x = iter->getX() * WINDOW_WIDTH;
+		m_TransformBasePosition[i].y = iter->getY() * WINDOW_HEIGHT;
+		++i;
+	}
+}
+
 void testApp::touchUp(ofTouchEventArgs & touch)
 {
 	// for debugging
 	// printf("up : %f\n", ofGetElapsedTimef());
+
 	float tempX = touch.x * WINDOW_WIDTH;
 	float tempY = touch.y * WINDOW_HEIGHT;
+
+	// printf("down : %f , %f\n", tempX, tempY);
 
 	if (m_TouchNumer == 4 && myTuio.client->getTuioCursors().size() > 4)
 	{
@@ -218,21 +243,14 @@ void testApp::touchUp(ofTouchEventArgs & touch)
 	m_TouchNumer = 0;
 }
 
-void testApp::touchMoved(ofTouchEventArgs & touch){
-	
-	switch(myTuio.client->getTuioCursors().size())
+void testApp::touchMoved(ofTouchEventArgs & touch)
+{
+	float tempX = touch.x * WINDOW_WIDTH;
+	float tempY = touch.y * WINDOW_HEIGHT;
+
+	if (myTuio.client->getTuioCursors().size() == 1)
 	{
-	case 1:
-		printf("move : 1\n");
-		// drag
-		break;
-	case 2:
-		printf("move : 2\n");
-		// rotate
-		// scale
-		break;
-	default:
-		break;
+		Drag(tempX, tempY);
 	}
 }
 
@@ -279,22 +297,37 @@ void testApp::SingleTap()
 {
 	printf("single tap\n");
 	m_SingleTapFlag = false;
+	Photo* selectedPhoto = nullptr;
 
 	switch (m_CurrentState)
 	{
 	case State::PHOTO_ALBUM_CLOSED:
+
 		if (!m_PhotoAlbum.Touch(m_SingleTapPosition) )
 			return;
-		// 터치 성공 다음 단계로
-		printf("next step : OPEN\n");
+		
+		m_PhotoAlbum.Open();
+		// printf("OPEN\n");
 		break;
+
 	case State::PHOTO_ALBUM_OPEN:
+
 		// 사진이 선택되었는지 판정해서 사진 선택
 		// 사진 선택 아니면 리턴
+		selectedPhoto = m_PhotoAlbum.GetSelectedPhoto(m_SingleTapPosition);
+		if (selectedPhoto != nullptr)
+		{
+			m_CurrentSelectedPhoto = selectedPhoto;
+			m_CurrentSelectedPhoto->Reset();
+		}
+		else
+		{
+			return;
+		}
 		break;
-	case State::PHOTO_SELECTED:
-	case State::PHOTO_TRANSFORMED:
+
 	default:
+
 		return;
 	}
 
@@ -309,15 +342,23 @@ void testApp::DoubleTap()
 	switch (m_CurrentState)
 	{
 	case State::PHOTO_ALBUM_OPEN:
+
 		// 앨범 닫힘 상태로 돌아간다
-		m_PhotoAlbum.Reset();
+		m_PhotoAlbum.Close();
 		break;
+
 	case State::PHOTO_SELECTED:
+
 		// 앨범 열림 상태로 돌아간다
+		m_PhotoAlbum.Open();
 		break;
+
 	case State::PHOTO_TRANSFORMED:
+
 		// 사진 선택 상태로 돌아간다
+		m_CurrentSelectedPhoto->Reset();
 		break;
+
 	case State::PHOTO_ALBUM_CLOSED:
 	default:
 		return;
@@ -326,97 +367,92 @@ void testApp::DoubleTap()
 	m_CurrentState = static_cast<State>( TransitionTable[static_cast<int>(m_CurrentState)][static_cast<int>(InputType::DOUBLE_TAP)] );
 }
 
-void testApp::Drag()
+void testApp::Drag(float tempX, float tempY)
 {
+	Photo* selectedPhoto = nullptr;
+
+	// drag
 	switch (m_CurrentState)
 	{
 	case State::PHOTO_ALBUM_CLOSED:
-		// 리턴
+
+		if (m_PhotoAlbum.Touch(tempX, tempY))
+			m_PhotoAlbum.SetPosition(tempX, tempY);
+		else
+			return;
 		break;
+
 	case State::PHOTO_ALBUM_OPEN:
-		// 사진 선택되어 있으면 그 사진 이동
-		// 아니면 리턴
+
+		selectedPhoto = m_PhotoAlbum.GetSelectedPhoto(m_SingleTapPosition);
+		if (selectedPhoto != nullptr)
+			selectedPhoto->SetPosition(tempX, tempY);
+		else
+			return;
 		break;
+
 	case State::PHOTO_SELECTED:
-		// 사진 이동
-		break;
 	case State::PHOTO_TRANSFORMED:
-		// 사진 이동
+
+		if (m_CurrentSelectedPhoto->Touch(tempX, tempY))
+			m_CurrentSelectedPhoto->SetPosition(tempX, tempY);
+		else
+			return;
 		break;
+
 	default:
-		break;
+		return;
 	}
 
 	m_CurrentState = static_cast<State>( TransitionTable[static_cast<int>(m_CurrentState)][static_cast<int>(InputType::DRAG)] );
 }
 
-void testApp::Pinch()
+void testApp::Transform()
 {
-	switch (m_CurrentState)
+	if (m_CurrentState != State::PHOTO_SELECTED &&
+		m_CurrentState != State::PHOTO_TRANSFORMED)
+		return;
+
+	// 사진 변형
+	int i = 0;
+	for ( auto *iter : myTuio.client->getTuioCursors() )
 	{
-	case State::PHOTO_ALBUM_CLOSED:
-		// 리턴
-		break;
-	case State::PHOTO_ALBUM_OPEN:
-		// 리턴
-		break;
-	case State::PHOTO_SELECTED:
-		// 사진 축소
-		break;
-	case State::PHOTO_TRANSFORMED:
-		// 사진 축소
-		break;
-	default:
-		break;
+		if (i >= 2)
+			return;
+
+		m_TransformCurrentPosition[i].x = iter->getX() * WINDOW_WIDTH;
+		m_TransformCurrentPosition[i].y = iter->getY() * WINDOW_HEIGHT;
+		++i;
 	}
 
-	m_CurrentState = static_cast<State>( TransitionTable[static_cast<int>(m_CurrentState)][static_cast<int>(InputType::PINCH)] );
-}
+	// 각도 구하기
+	float originAngle = atanf(
+		(m_TransformBasePosition[1].y - m_TransformBasePosition[0].y) / 
+		(m_TransformBasePosition[1].x - m_TransformBasePosition[0].x)
+		);
+	float currentAngle = atanf(
+		(m_TransformCurrentPosition[1].y - m_TransformCurrentPosition[0].y) / 
+		(m_TransformCurrentPosition[1].x - m_TransformCurrentPosition[0].x)
+		);
 
-void testApp::Spread()
-{
-	switch (m_CurrentState)
-	{
-	case State::PHOTO_ALBUM_CLOSED:
-		// 리턴
-		break;
-	case State::PHOTO_ALBUM_OPEN:
-		// 리턴
-		break;
-	case State::PHOTO_SELECTED:
-		// 사진 확대
-		break;
-	case State::PHOTO_TRANSFORMED:
-		// 사진 확대
-		break;
-	default:
-		break;
-	}
+	m_CurrentSelectedPhoto->SetAngle( (currentAngle - originAngle) * 360 / PI );
 
-	m_CurrentState = static_cast<State>( TransitionTable[static_cast<int>(m_CurrentState)][static_cast<int>(InputType::SPREAD)] );
-}
+	// 스케일 구하기
+	float originDistance = sqrt( 
+		pow(m_TransformBasePosition[0].x - m_TransformBasePosition[1].x, 2.0f) + 
+		pow(m_TransformBasePosition[0].y - m_TransformBasePosition[1].y, 2.0f) 
+		);
+	float currentDistance = sqrt( 
+		pow(m_TransformCurrentPosition[0].x - m_TransformCurrentPosition[1].x, 2.0f) + 
+		pow(m_TransformCurrentPosition[0].y - m_TransformCurrentPosition[1].y, 2.0f) 
+		);
 
-void testApp::Rotate()
-{
-	switch (m_CurrentState)
-	{
-	case State::PHOTO_ALBUM_CLOSED:
-		// 리턴
-		break;
-	case State::PHOTO_ALBUM_OPEN:
-		// 리턴
-		break;
-	case State::PHOTO_SELECTED:
-		// 사진 회전
-		break;
-	case State::PHOTO_TRANSFORMED:
-		// 사진 회전
-		break;
-	default:
-		break;
-	}
+	if (currentDistance / originDistance < MINIMUM_SCALE)
+		m_CurrentSelectedPhoto->SetScale( MINIMUM_SCALE );
+	else
+		m_CurrentSelectedPhoto->SetScale( currentDistance / originDistance );
 
-	m_CurrentState = static_cast<State>( TransitionTable[static_cast<int>(m_CurrentState)][static_cast<int>(InputType::ROTATE)] );
+	m_CurrentState = static_cast<State>( TransitionTable[static_cast<int>(m_CurrentState)][static_cast<int>(InputType::TRANSFORM)] );
 }
 
 void testApp::Squeeze()
@@ -425,21 +461,26 @@ void testApp::Squeeze()
 
 	switch (m_CurrentState)
 	{
-	case State::PHOTO_ALBUM_CLOSED:
-		// 리턴
-		break;
 	case State::PHOTO_ALBUM_OPEN:
-		m_PhotoAlbum.Reset();
+		
 		// 앨범 닫힌 상태로 돌아감
+		m_PhotoAlbum.Close();
 		break;
+
 	case State::PHOTO_SELECTED:
+		
 		// 앨범 열림 상태로 돌아감
+		m_PhotoAlbum.Open();
 		break;
+
 	case State::PHOTO_TRANSFORMED:
+
 		// 앨범 열린 상태로 돌아감
+		m_PhotoAlbum.Open();
 		break;
+
 	default:
-		break;
+		return;
 	}
 
 	m_CurrentState = static_cast<State>( TransitionTable[static_cast<int>(m_CurrentState)][static_cast<int>(InputType::SQUEEZE)] );
@@ -452,19 +493,13 @@ void testApp::Splay()
 	switch (m_CurrentState)
 	{
 	case State::PHOTO_ALBUM_CLOSED:
+
 		// 앨범 오픈!
+		m_PhotoAlbum.Open();
 		break;
-	case State::PHOTO_ALBUM_OPEN:
-		// 리턴
-		break;
-	case State::PHOTO_SELECTED:
-		// 리턴
-		break;
-	case State::PHOTO_TRANSFORMED:
-		// 리턴
-		break;
+
 	default:
-		break;
+		return;
 	}
 
 	m_CurrentState = static_cast<State>( TransitionTable[static_cast<int>(m_CurrentState)][static_cast<int>(InputType::SPLAY)] );
