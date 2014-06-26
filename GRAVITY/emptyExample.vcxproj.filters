@@ -13,6 +13,9 @@
     <ClCompile Include="src\testApp.cpp">
       <Filter>Source</Filter>
     </ClCompile>
+    <ClCompile Include="src\WaitingScene.cpp">
+      <Filter>Source</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\..\addons\ofxOpenNI\include\openni\IXnNodeAllocator.h">
@@ -385,6 +388,12 @@
       <Filter>Lib</Filter>
     </ClInclude>
     <ClInclude Include="src\testApp.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="src\config.h">
+      <Filter>Source</Filter>
+    </ClInclude>
+    <ClInclude Include="src\WaitingScene.h">
       <Filter>Source</Filter>
     </ClInclude>
   </ItemGroup>

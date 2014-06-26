@@ -5,6 +5,9 @@
 #include "ofMain.h"
 #include <array>
 
+#include "config.h"
+#include "WaitingScene.h"
+
 #define MAX_DEVICES 2
 #define MAX_NUMBER_OF_HAND 4
 
@@ -25,29 +28,39 @@ public:
 	void mouseReleased(int x, int y, int button);
 	void windowResized(int w, int h);
 
+	void DrawDebugInfo();
+
+	int IMAGE_SIZE_X;
+	int IMAGE_SIZE_Y;
+
 private:
-    void headEvent(ofxOpenNIHandEvent& event);
-	void userEvent(ofxOpenNIUserEvent& event);
     
 	ofxOpenNI openNIDevice;
-    ofTrueTypeFont verdana;
-    ofImage m_Image;
-    
-	bool m_IsTrackingPrev;
-	bool m_IsTrackingCurr;
 
-	bool m_IsWaiting;
+    ofImage			m_Image;
+	WaitingScene	m_WaitingScene;
 
-	int m_MousePrevX;
-	int m_MousePrevY;
+	// main logic
+	ofVec3f m_CurrentEyePosition; // x, y, z
 
-	int m_MouseCurrX;
-	int m_MouseCurrY;
+	bool	m_IsTrackingCurr;
+	bool	m_IsTrackingPrev;
 
-	float m_ImagePositionX;
-	float m_ImagePositionY;
+	float	m_ImageCenterPositionX;
+	float	m_ImageCenterPositionY;
+	float	m_ImageScale;
 
-	float m_ImageSizeWeight;
+	float	m_ImageCenterPositionXR;
+	float	m_ImageCenterPositionYR;
+	float	m_ImageScaleR;
+
+	float	m_ScaleTransformConstant;	// C
+	float	m_ScaleTransformGuide;		// h
+
+	float	m_ScreenKinectResolutionRatio;
+
+	// debug
+	ofTrueTypeFont m_Text;
 };
 
 #endif
