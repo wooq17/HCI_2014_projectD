@@ -57,3 +57,4 @@ https://github.com/wooq17/HCI_2014_projectD/issues/milestones
 
 
 동영상
+https://vimeo.com/99287181
